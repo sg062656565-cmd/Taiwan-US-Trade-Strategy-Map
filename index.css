@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-brand-blue: #3b82f6;
+  --color-brand-indigo: #6366f1;
+  --color-brand-emerald: #10b981;
+  
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 24px;
+}
+
+@layer base {
+  body {
+    @apply bg-[#020617] text-slate-100 font-sans antialiased selection:bg-blue-500/30;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-slate-900/40 backdrop-blur-md border border-slate-700/50 shadow-xl overflow-hidden rounded-2xl transition-all duration-300;
+  }
+  
+  .glass-panel {
+    @apply bg-slate-900/60 backdrop-blur-xl border border-white/5 shadow-2xl;
+  }
+  
+  .floating-nav {
+    @apply fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-1 p-2 bg-slate-900/80 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl z-[100];
+  }
+  
+  .nav-item {
+    @apply px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 whitespace-nowrap flex items-center gap-2;
+  }
+  
+  .nav-item-active {
+    @apply bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)];
+  }
+  
+  .nav-item-inactive {
+    @apply text-slate-400 hover:text-slate-100 hover:bg-slate-800/50;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-700 rounded-full hover:bg-slate-600 transition-colors;
+  }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
