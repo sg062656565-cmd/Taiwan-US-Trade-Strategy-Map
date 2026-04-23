@@ -59,7 +59,7 @@ const LocalImpactMap: React.FC<LocalImpactMapProps> = ({ active }) => {
         .attr('stroke', '#334155')
         .attr('stroke-width', 0.5)
         .attr('class', 'cursor-pointer hover:opacity-80 transition-opacity')
-        .on('mouseenter', (event, d: any) => {
+        .on('click', (event, d: any) => {
           const enName = d.properties.name;
           const zhName = US_STATES_MAP[enName] || enName;
           const impact = US_STATE_IMPACTS[enName];
@@ -69,6 +69,7 @@ const LocalImpactMap: React.FC<LocalImpactMapProps> = ({ active }) => {
             state: enName,
             details: impact
           });
+          setImpactInfo(''); // Clear detailed report when clicking a new state to encourage deeper node clicks
         });
 
       g.append('g')

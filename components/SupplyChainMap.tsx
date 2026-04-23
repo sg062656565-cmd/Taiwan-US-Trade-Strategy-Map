@@ -28,8 +28,8 @@ const SupplyChainMap: React.FC<SupplyChainMapProps> = ({ industry, active, data 
     const height = 600;
     // Fixed projection to show Asia to Americas
     const projection = d3.geoMercator()
-      .center([10, 20])
-      .scale(140)
+      .center([0, 15])
+      .scale(120)
       .translate([width / 2, height / 2]);
 
     const path = d3.geoPath().projection(projection);

@@ -222,7 +222,7 @@ const App: React.FC = () => {
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 pt-16 pb-24 relative overflow-hidden flex flex-col">
+        <main className="flex-1 pt-36 pb-12 relative overflow-hidden flex flex-col">
           <div className="flex-1 relative">
             <AnimatePresence mode="wait">
               <motion.div
@@ -499,8 +499,8 @@ const App: React.FC = () => {
           </div>
         </main>
 
-        {/* Floating Dock Navigation */}
-        <nav className="fixed bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2 p-3 bg-slate-900/90 backdrop-blur-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.6)] rounded-3xl z-[100]">
+        {/* Floating Dock Navigation - Moved to Top */}
+        <nav className="fixed top-20 left-1/2 -translate-x-1/2 flex items-center gap-2 p-3 bg-slate-900/90 backdrop-blur-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.6)] rounded-3xl z-[100]">
           {Object.entries(stepInfo).map(([step, info]) => (
             <button
               key={step}
