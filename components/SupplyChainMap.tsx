@@ -3,6 +3,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { Industry } from '../types';
 import { SUPPLY_CHAIN_SHIFTS } from '../constants';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 interface SupplyChainMapProps {
   industry: Industry;
@@ -34,6 +40,10 @@ const SupplyChainMap: React.FC<SupplyChainMapProps> = ({ industry, active, data 
 
     const zoom = d3.zoom<SVGSVGElement, unknown>()
       .scaleExtent([1, 8])
+      .filter((event) => {
+        // Only allow scroll zoom if Ctrl key is pressed to prevent accidental zooming when scrolling page
+        return event.type !== 'wheel' || event.ctrlKey;
+      })
       .on('zoom', (event) => {
         g.attr('transform', event.transform);
       });
@@ -134,30 +144,37 @@ const SupplyChainMap: React.FC<SupplyChainMapProps> = ({ industry, active, data 
       {/* Floating Popup */}
       {hoveredShift && (
         <div 
-          className="fixed pointer-events-none z-[100] glass-panel p-4 rounded-2xl border border-green-500/30 shadow-2xl max-w-sm animate-in fade-in zoom-in duration-200"
-          style={{ left: mousePos.x + 20, top: mousePos.y + 20 }}
+          className={cn(
+            "fixed pointer-events-none z-[100] glass-panel p-6 rounded-2xl border border-green-500/30 shadow-2xl max-w-sm animate-in fade-in zoom-in duration-200",
+            // Adjust position based on screen half to prevent going off-screen
+            mousePos.x > window.innerWidth / 2 ? "-translate-x-full ml-[-20px]" : "ml-[20px]",
+            mousePos.y > window.innerHeight / 2 ? "-translate-y-full mt-[-20px]" : "mt-[20px]"
+          )}
+          style={{ left: mousePos.x, top: mousePos.y }}
         >
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <h4 className="text-lg font-bold text-white">{hoveredShift.company}</h4>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <h4 className="text-xl font-bold text-white">{hoveredShift.company}</h4>
           </div>
-          <div className="space-y-3">
-            <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-800 pb-1">
+          <div className="space-y-4">
+            <div className="flex justify-between text-[13px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-800 pb-2">
               <span>{hoveredShift.from}</span>
-              <span className="text-green-500">→</span>
+              <span className="text-green-500 text-lg">→</span>
               <span>{hoveredShift.to}</span>
             </div>
-            <p className="text-sm text-slate-200 leading-relaxed font-medium">{hoveredShift.move}</p>
-            <div className="bg-green-500/10 p-3 rounded-xl border border-green-500/20">
-              <div className="text-[10px] font-bold text-green-400 uppercase mb-1">戰略情報 (2026 報告)</div>
-              <p className="text-xs text-green-100 leading-relaxed italic">{hoveredShift.report}</p>
+            <p className="text-[16px] text-slate-100 leading-relaxed font-bold">{hoveredShift.move}</p>
+            <div className="bg-green-500/10 p-4 rounded-xl border border-green-500/20">
+              <div className="text-[12px] font-bold text-green-400 uppercase mb-2">戰略情報深度解析 (2026)</div>
+              <p className="text-sm text-green-50 leading-relaxed italic">{hoveredShift.report}</p>
             </div>
-            <div className="text-[10px] text-slate-500 font-bold">核心重點：{hoveredShift.focus}</div>
+            <div className="text-[12px] text-slate-500 font-bold">核心重點：{hoveredShift.focus}</div>
           </div>
         </div>
       )}
 
-      {/* Remove the absolute title box as requested to clear space */}
+      <div className="absolute top-4 right-4 bg-slate-900/80 text-[10px] text-slate-400 px-3 py-1 rounded-full border border-white/5 pointer-events-none">
+        按住 Ctrl + 滾輪 進行縮放
+      </div>
     </div>
   );
 };

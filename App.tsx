@@ -30,9 +30,16 @@ const App: React.FC = () => {
   const [isPolicyExpanded, setIsPolicyExpanded] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
-  const [hasApiKey, setHasApiKey] = useState(true);
+  const [hasApiKey, setHasApiKey] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showStageInfo, setShowStageInfo] = useState(false);
+
+  useEffect(() => {
+    if (hasApiKey) {
+      setShowStageInfo(true);
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [activeStep, hasApiKey]);
 
   useEffect(() => {
     const savedKey = localStorage.getItem('gemini_api_key');
@@ -52,17 +59,39 @@ const App: React.FC = () => {
     setIsLoading(true);
     setErrorMessage('');
     try {
-      const ai = new (await import("@google/genai")).GoogleGenAI({ apiKey: apiKeyInput });
-      await ai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: [{ role: 'user', parts: [{ text: 'test' }] }],
+      const { GoogleGenAI } = await import("@google/genai");
+      const ai = new GoogleGenAI({ apiKey: apiKeyInput.trim() });
+      
+      // Attempt validation with gemini-flash-latest for best compatibility
+      const response = await ai.models.generateContent({
+        model: 'gemini-flash-latest',
+        contents: [{ role: 'user', parts: [{ text: 'OK' }] }]
       });
+      
+      if (!response.text) throw new Error("EMPTY_RESPONSE");
       
       localStorage.setItem('gemini_api_key', apiKeyInput);
       setHasApiKey(true);
       setIsSettingsOpen(false);
-    } catch (error) {
-      setErrorMessage('無效的 API Key，請檢查後重試。');
+    } catch (error: any) {
+      console.error("API Key Validation Error:", error);
+      let msg = '驗證失敗，請檢查金鑰。';
+      
+      const errMsg = typeof error === 'string' ? error : (error.message || JSON.stringify(error));
+      
+      if (errMsg.includes('API_KEY_INVALID')) {
+        msg = '錯誤：API 金鑰無效，請確認金鑰是否正確。';
+      } else if (errMsg.includes('404') || errMsg.includes('NOT_FOUND')) {
+        msg = '錯誤 (404)：找不到模型。這通常是因為 API 金鑰尚未生效或輸入錯誤。請確保您已從 Google AI Studio 獲取正確的金鑰。';
+      } else if (errMsg.includes('PERMISSION_DENIED') || errMsg.includes('403')) {
+        msg = '錯誤 (403)：權限不足。請確認 API 金鑰已在 Google AI Studio 中啟用。';
+      } else if (errMsg.includes('QUOTA_EXCEEDED') || errMsg.includes('429')) {
+        msg = '錯誤 (429)：配額已達上限。請稍後再試。';
+      } else {
+        msg = `錯誤：${errMsg}`;
+      }
+      
+      setErrorMessage(msg);
     } finally {
       setIsLoading(false);
     }
@@ -246,10 +275,10 @@ const App: React.FC = () => {
                           </div>
                           
                           {isPolicyExpanded && (
-                            <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 space-y-4 max-h-[150px]">
+                            <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 space-y-4 max-h-[400px]">
                               {geoUpdate ? (
                                 <>
-                                  <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
+                                  <div className="text-slate-100 text-[18px] leading-[1.8] whitespace-pre-wrap bg-slate-900/40 p-6 rounded-2xl border border-white/5 shadow-inner">
                                     {geoUpdate.summary}
                                   </div>
                                   <div className="flex flex-wrap gap-2 pt-4 border-t border-white/5">
@@ -646,6 +675,63 @@ const App: React.FC = () => {
                     </button>
                   )}
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* Stage Info Modal */}
+      <AnimatePresence>
+        {showStageInfo && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowStageInfo(false)}
+              className="absolute inset-0 bg-[#020617]/90 backdrop-blur-2xl cursor-pointer"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="w-full max-w-2xl glass-card p-6 sm:p-10 border-white/10 relative shadow-4xl bg-slate-900/90 max-h-[85vh] overflow-y-auto custom-scrollbar"
+            >
+              <div className="flex items-center gap-4 mb-6">
+                <div className="bg-blue-600/20 p-3 rounded-2xl ring-1 ring-blue-500/30 text-blue-500 text-2xl">
+                  {stepInfo[activeStep].icon}
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-blue-500 uppercase tracking-[0.2em]">當前章節引導</span>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">{stepInfo[activeStep].title}</h3>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="bg-slate-900/50 p-5 rounded-2xl border border-white/5">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Icons.Shield className="w-3 h-3" /> 操作說明
+                  </h4>
+                  <p className="text-slate-200 text-sm leading-relaxed">
+                    {stepInfo[activeStep].how}
+                  </p>
+                </div>
+
+                <div className="bg-amber-500/5 p-5 rounded-2xl border border-amber-500/10">
+                  <h4 className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Icons.Zap className="w-3 h-3" /> 閱讀重點
+                  </h4>
+                  <p className="text-amber-100 text-sm leading-relaxed font-medium">
+                    {stepInfo[activeStep].focus}
+                  </p>
+                </div>
+
+                <button 
+                  onClick={() => setShowStageInfo(false)}
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-bold transition-all shadow-xl shadow-blue-500/20 active:scale-[0.98]"
+                >
+                  開始探索
+                </button>
               </div>
             </motion.div>
           </div>

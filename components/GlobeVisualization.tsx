@@ -1,6 +1,12 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 interface GlobeProps {
   active: boolean;
@@ -34,15 +40,15 @@ const GlobeVisualization: React.FC<GlobeProps> = ({ active }) => {
     const g = svg.append('g');
 
     const countryDataMap: Record<string, any> = {
-      'Taiwan': { tariff: '15%', industries: ['半導體', '伺服器', '網通'], desc: '2026/2/12 簽署 ART 協定，上限 15%' },
-      'China': { tariff: '35% - 45%', industries: ['電動車', '鋼鐵', '電子'], desc: '301 條款調查中，產能過剩制裁' },
-      'Vietnam': { tariff: '20%', industries: ['電子代工', '家具'], desc: '面臨「洗產地」溯源調查風險' },
-      'Mexico': { tariff: '10%', industries: ['汽車', '電子'], desc: '適用第 122 條款 10% 附加關稅' },
-      'India': { tariff: '20%', industries: ['軟體', '製藥'], desc: '10% 附加關稅 + 基礎對等關稅' },
-      'South Korea': { tariff: '15%', industries: ['記憶體', '汽車'], desc: '受惠於國安豁免，維持較低稅率' },
-      'Japan': { tariff: '15%', industries: ['精密機械', '汽車'], desc: '受惠於國安豁免，維持較低稅率' },
-      'United Kingdom': { tariff: '10%', industries: ['金融', '航太'], desc: '適用第 122 條款基準稅率' },
-      'United States of America': { tariff: 'N/A', industries: ['設計', '軟體'], desc: '核心發起國' },
+      'Taiwan': { name: '臺灣', tariff: '15%', industries: ['半導體', '伺服器', '網通'], desc: '2026/2/12 簽署 ART 協定，上限 15%' },
+      'China': { name: '中國', tariff: '35% - 45%', industries: ['電動車', '鋼鐵', '電子'], desc: '301 條款調查中，產能過剩制裁' },
+      'Vietnam': { name: '越南', tariff: '20%', industries: ['電子代工', '家具'], desc: '面臨「洗產地」溯源調查風險' },
+      'Mexico': { name: '墨西哥', tariff: '10%', industries: ['汽車', '電子'], desc: '適用第 122 條款 10% 附加關稅' },
+      'India': { name: '印度', tariff: '20%', industries: ['軟體', '製藥'], desc: '10% 附加關稅 + 基礎對等關稅' },
+      'South Korea': { name: '南韓', tariff: '15%', industries: ['記憶體', '汽車'], desc: '受惠於國安豁免，維持較低稅率' },
+      'Japan': { name: '日本', tariff: '15%', industries: ['精密機械', '汽車'], desc: '受惠於國安豁免，維持較低稅率' },
+      'United Kingdom': { name: '英國', tariff: '10%', industries: ['金融', '航太'], desc: '適用第 122 條款基準稅率' },
+      'United States of America': { name: '美國', tariff: 'N/A', industries: ['設計', '軟體'], desc: '核心發起國' },
     };
 
     d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then((data: any) => {
@@ -71,11 +77,11 @@ const GlobeVisualization: React.FC<GlobeProps> = ({ active }) => {
         .attr('stroke-width', 0.5)
         .on('mousemove', (event, d: any) => {
           const name = d.properties.name;
-          const info = countryDataMap[name] || { tariff: '10%-25%', industries: ['各類消費品'], desc: '一般關稅區' };
+          const info = countryDataMap[name] || { name: name, tariff: '10%-25%', industries: ['各類消費品'], desc: '一般關稅區' };
           setTooltip({
             x: event.clientX,
             y: event.clientY,
-            data: { name, ...info }
+            data: { ...info }
           });
         })
         .on('mouseleave', () => setTooltip(null));
@@ -121,14 +127,18 @@ const GlobeVisualization: React.FC<GlobeProps> = ({ active }) => {
       />
       {tooltip && (
         <div 
-          className="fixed pointer-events-none glass-panel p-3 rounded-xl border border-blue-500/30 z-[100] text-xs shadow-2xl max-w-[200px]"
-          style={{ left: tooltip.x + 15, top: tooltip.y + 15 }}
+          className={cn(
+            "fixed pointer-events-none glass-panel p-4 rounded-xl border border-blue-500/30 z-[100] text-[14px] shadow-2xl max-w-[250px] animate-in fade-in duration-200",
+            tooltip.x > window.innerWidth / 2 ? "-translate-x-full ml-[-20px]" : "ml-[20px]",
+            tooltip.y > window.innerHeight / 2 ? "-translate-y-full mt-[-20px]" : "mt-[20px]"
+          )}
+          style={{ left: tooltip.x, top: tooltip.y }}
         >
-          <div className="font-bold text-blue-400 mb-1">{tooltip.data.name}</div>
-          <div className="flex flex-col gap-1">
-            <div className="text-slate-300">關稅稅率: <span className="text-white font-mono">{tooltip.data.tariff}</span></div>
+          <div className="font-bold text-blue-400 mb-2 text-base">{tooltip.data.name}</div>
+          <div className="flex flex-col gap-2">
+            <div className="text-slate-300">關稅稅率: <span className="text-white font-bold">{tooltip.data.tariff}</span></div>
             <div className="text-slate-300">受影響產業: <span className="text-white">{tooltip.data.industries.join(', ')}</span></div>
-            <div className="text-slate-500 text-[10px] mt-1 italic border-t border-slate-800 pt-1">{tooltip.data.desc}</div>
+            <div className="text-slate-500 text-xs mt-1 italic border-t border-slate-800 pt-2 leading-relaxed">{tooltip.data.desc}</div>
           </div>
         </div>
       )}
